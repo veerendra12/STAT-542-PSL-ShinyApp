@@ -25,7 +25,10 @@ getRecommendationsByGenre <- function(movies, ratings, user_genre, topN = 10){
   print(paste("getRecommendationsByGenre()::", user_genre))
 
   movie_id_genres <- movies %>% filter(Genres == user_genre)
-  if(length(movie_id_genres$MovieID) == 0 || length(movie_id_genres$MovieID) < topN) {
+  print(length(movie_id_genres$MovieID))
+  print(unique(movie_id_genres$MovieID))
+  if(length(movie_id_genres$MovieID) == 0 || length(movie_id_genres$MovieID) < (topN + 5)) {
+    print("More movies...")
     movie_id_genres <- movies %>% filter(grepl(user_genre, Genres))
   }
   ratings_mov_genres <- ratings %>% filter(MovieID %in% movie_id_genres$MovieID)
