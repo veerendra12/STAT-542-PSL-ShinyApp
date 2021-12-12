@@ -1,0 +1,13 @@
+name: MovieRecommenderEngine
+title: MovieRecommenderEngine
+username:
+account: codegeekusa
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5270179
+bundleId: 5363230
+url: https://codegeekusa.shinyapps.io/MovieRecommenderEngine/
+when: 1639334782.6012
+lastSyncTime: 1639334782.60121
+asMultiple: FALSE
+asStatic: FALSE
