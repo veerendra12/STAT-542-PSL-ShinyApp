@@ -5,7 +5,7 @@ This application is a shiny based webapp and offers two ways of recommending mov
     2. Based on User-Based Collaborative Filtering (UBCF)
 
 
-Web App: https://wangpuzhou.shinyapps.io/MovieRecommender/
+Web App: https://codegeekusa.shinyapps.io/MovieRecommenderEngine/
 
 
 # References:

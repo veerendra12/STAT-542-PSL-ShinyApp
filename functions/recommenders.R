@@ -7,6 +7,10 @@
 library(data.table)
 library(dplyr)
 library(recommenderlab)
+library(reshape2)
+library(Matrix)
+library(tidyverse)
+library(data.table)
 
 SYSTEM2.MODEL = "data/system2.best.model.rds"
 set.seed(4675)
@@ -20,13 +24,16 @@ if(file.exists('data/top_20_movies_global.rds')) {
 getRecommendationsByGenre <- function(movies, ratings, user_genre, topN = 10){
   print(paste("getRecommendationsByGenre()::", user_genre))
 
-  movie_id_genres <- movies %>% filter(Genres == 'Action')
-  if(length(movie_id_genres$MovieID) == 0 || length(movie_id_genres$MovieID) < topn) {
-    movie_id_genres <- movies %>% filter(grepl('Action', Genres))
+  movie_id_genres <- movies %>% filter(Genres == user_genre)
+  if(length(movie_id_genres$MovieID) == 0 || length(movie_id_genres$MovieID) < topN) {
+    movie_id_genres <- movies %>% filter(grepl(user_genre, Genres))
   }
   ratings_mov_genres <- ratings %>% filter(MovieID %in% movie_id_genres$MovieID)
   dimension_names <- list(user_id = sort(unique(ratings_mov_genres$UserID)), movie_id =   sort(unique(ratings_mov_genres$MovieID)))
-  ratingmat <- spread(select(ratings_mov_genres, MovieID, UserID, Rating), MovieID, Rating) %>% select(-UserID)
+  
+  # ratingmat <- spread(select(ratings_mov_genres, MovieID, UserID, Rating), MovieID, Rating) %>% select(-UserID)
+  ratingmat = spread(ratings_mov_genres[, c("MovieID", "UserID", "Rating")], MovieID, Rating)
+  ratingmat = ratingmat[ , -which(names(ratingmat) %in% c("UserID"))]
   
   ratingmat <- as.matrix(ratingmat)
   dimnames(ratingmat) <- dimension_names
@@ -44,28 +51,14 @@ getRecommendationsByGenre <- function(movies, ratings, user_genre, topN = 10){
   
   movie_ratings_aggregration = colSums(rec.popular.predict.matrix, na.rm = TRUE)
   #print(sort(movie_ratings_aggregration, decreasing = TRUE)[1:20])
-  recom_pop = names(sort(movie_ratings_aggregration, decreasing = TRUE)[1:topn])
+  recom_pop = as.numeric(names(sort(movie_ratings_aggregration, decreasing = TRUE)[1:topN]))
+  
+  print("***** Recommended.movies (Genre) ****")
   print(recom_pop)
   
+  gc(verbose = FALSE)
+  
   return (recom_pop)
-}
-
-# genre-based recommender
-getRecommendationsByGenre2 <- function(movies, ratings, user_genre, topN = 10){
-  print(user_genre)
-  # combine rating information into movies
-  mr = ratings %>% 
-    group_by(MovieID) %>% 
-    summarize(ratings_per_movie = n(), ave_ratings = mean(Rating)) %>%
-    inner_join(movies, by = 'MovieID')
-  
-  # movies from selected genre
-  mr_sel = mr[grep(user_genre, mr$Genres),]
-  
-  # recommender based on popularity
-  recom_pop = arrange(mr_sel, desc(ratings_per_movie))
-  
-  recom_pop$MovieID[1:topN]
 }
 
 
@@ -149,10 +142,30 @@ getRecommendationsByUserRatings = function(system2.best.model,
     recommended.movies = pred.items[1:topN]
   }
 
-  print("***** Recommended.movies ****")
+  print("***** Recommended.movies (Ratings) ****")
   print(recommended.movies)
   
   gc(verbose = FALSE)
   
   return (recommended.movies)
+}
+
+
+# genre-based recommender 
+# Unused
+getRecommendationsByGenre2 <- function(movies, ratings, user_genre, topN = 10){
+  print(user_genre)
+  # combine rating information into movies
+  mr = ratings %>% 
+    group_by(MovieID) %>% 
+    summarize(ratings_per_movie = n(), ave_ratings = mean(Rating)) %>%
+    inner_join(movies, by = 'MovieID')
+  
+  # movies from selected genre
+  mr_sel = mr[grep(user_genre, mr$Genres),]
+  
+  # recommender based on popularity
+  recom_pop = arrange(mr_sel, desc(ratings_per_movie))
+  
+  recom_pop$MovieID[1:topN]
 }
